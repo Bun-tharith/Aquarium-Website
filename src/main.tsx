@@ -14,7 +14,7 @@ import SavedQuestionPage from "./page/SavedQuestionPage";
 import PostDetailPage from "./page/PostDetailPage";
 import ProfileComponent from "./components/ProfileComponent";
 import { ThemeProvider } from "./ThemeProvider";
-import { TagBrowserComponent } from "./components/TagBrowserComponent";
+import TagPage from "./page/TagPage";
 
 const router = createBrowserRouter([
   {
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
       },
       {
           path: "/tag",
-        element: <TagBrowserComponent />,
+        element: <TagPage/>,
       }
     ],
   },

@@ -1,0 +1,17 @@
+import { SidebarComponent } from "../components/SideBarComponent";
+import { TagBrowserComponent } from "../components/TagBrowserComponent";
+
+
+export default function TagPage() {
+  return (
+    <div>
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-slate-50 transition-colors duration-300 dark:bg-slate-900 lg:flex-row">
+            <SidebarComponent />
+
+            <main className="min-h-0 flex-1 overflow-y-auto p-4 transition-colors duration-300 sm:p-6 lg:p-8">
+                <TagBrowserComponent/>
+            </main>
+        </div>
+    </div>
+  )
+}

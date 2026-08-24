@@ -47,11 +47,11 @@ export default function RegisterComponent() {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#a6acc9] p-6">
-            <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl flex overflow-hidden">
+        <div className="min-h-screen w-full flex items-center justify-center bg-[#a6acc9] p-4 sm:p-6">
+            <div className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
                 {/* Left: Form Panel */}
-                <div className="w-1/2 flex items-center justify-center bg-[#f4f2f9] border-r border-slate-200 py-10">
-                    <div className="w-full max-w-xs bg-slate-50 rounded-2xl shadow-md px-8 py-10">
+                <div className="w-full md:w-1/2 flex items-center justify-center bg-[#f4f2f9] border-b md:border-b-0 md:border-r border-slate-200 py-8 sm:py-10">
+                    <div className="w-full max-w-xs bg-slate-50 rounded-2xl shadow-md px-6 sm:px-8 py-8 sm:py-10">
                         {/* Header */}
                         <div className="flex flex-col items-center mb-8">
                             <svg
@@ -160,18 +160,20 @@ export default function RegisterComponent() {
                                 {isLoading ? "Registering..." : "Register"}
                             </button>
                         </form>
-                          <Link
-                    to="/login"
-                    className="ml-14 text-sm text-red-500 hover:underline cursor-pointer"
-                >
-                    I have account already
-                </Link>
+
+                        <div className="text-center sm:text-left sm:ml-14 mt-2">
+                            <Link
+                                to="/login"
+                                className="text-sm text-red-500 hover:underline cursor-pointer"
+                            >
+                                I have account already
+                            </Link>
+                        </div>
                     </div>
                 </div>
-              
 
                 {/* Right: Picture Panel */}
-                <div className="w-1/2 relative flex items-center justify-center bg-white overflow-hidden">
+                <div className="hidden md:flex w-full md:w-1/2 relative items-center justify-center bg-white overflow-hidden min-h-[200px] md:min-h-0">
                     <img
                         src="/images/Secure.jpg"
                         alt="Register illustration"

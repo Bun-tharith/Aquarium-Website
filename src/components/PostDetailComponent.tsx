@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent, type ChangeEvent } from "react";
+import { useState, useEffect, type KeyboardEvent, type ChangeEvent } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -7,9 +7,16 @@ import {
     useDeletePostByIdMutation,
 } from "../services/post";
 
-import { useCreateVoteMutation } from "../services/vote";
+import {
+    useCreateVoteMutation,
+    useDeleteVoteByIdMutation,
+} from "../services/vote";
 
-import { useAddBookmarkMutation } from "../services/bookmark";
+import {
+    useAddBookmarkMutation,
+    useRemoveBookmarkMutation,
+    useGetBookmarksQuery,
+} from "../services/bookmark";
 
 import {
     useCreateCommentMutation,
@@ -40,6 +47,36 @@ interface Comment {
     userDisplayName: string;
 }
 
+const LIKE_VOTE_TYPE_ID = 1;
+
+// Bookmarks can come back from different backends shaped differently.
+// This pulls a postId out of whatever shape shows up.
+function extractPostId(entry: unknown): number | string | undefined {
+    if (entry === null || typeof entry !== "object") return undefined;
+    const record = entry as Record<string, unknown>;
+    if (typeof record.postId === "number" || typeof record.postId === "string") return record.postId;
+    if (typeof record.id === "number" || typeof record.id === "string") {
+        // Some APIs return the post itself (with title/body) inside the bookmark list
+        if ("title" in record || "body" in record) return record.id as number | string;
+    }
+    if (record.post && typeof record.post === "object") {
+        const nested = record.post as Record<string, unknown>;
+        if (typeof nested.id === "number" || typeof nested.id === "string") return nested.id;
+    }
+    return undefined;
+}
+
+function normalizeBookmarksList(raw: unknown): unknown[] {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === "object") {
+        const record = raw as Record<string, unknown>;
+        if (Array.isArray(record.data)) return record.data;
+        if (Array.isArray(record.bookmarks)) return record.bookmarks;
+        if (Array.isArray(record.items)) return record.items;
+    }
+    return [];
+}
+
 export const PostDetailComponent = () => {
     const { postId: postIdParam } = useParams<{ postId: string }>();
     const postId = postIdParam ? Number(postIdParam) : undefined;
@@ -52,13 +89,50 @@ export const PostDetailComponent = () => {
         isFetching: postFetching,
     } = useGetPostByIdQuery(postId, { skip: !validPostId });
 
-    const [createVote, { isLoading: voting }] = useCreateVoteMutation();
+    const [createVote, { isLoading: liking }] = useCreateVoteMutation();
+    const [deleteVoteById, { isLoading: unliking }] = useDeleteVoteByIdMutation();
+    const voting = liking || unliking;
 
-    const [addBookmark, { isLoading: bookmarking }] = useAddBookmarkMutation({
-        fixedCacheKey: "shared-add-bookmark",
+    const [liked, setLiked] = useState<boolean>(false);
+    const [likedVoteId, setLikedVoteId] = useState<number | null>(null);
+    const [likeCount, setLikeCount] = useState<number | null>(null);
+
+    // Seed the displayed count once from the post, then manage it locally from there
+    useEffect(() => {
+        if (post && likeCount === null) {
+            setLikeCount(post.score);
+        }
+    }, [post, likeCount]);
+
+    // ==================================================
+    // BOOKMARKS (permanent, tied to the logged-in account)
+    // ==================================================
+    const { data: bookmarksData } = useGetBookmarksQuery(undefined, {
+        skip: !validPostId,
     });
+
+    const [addBookmark, { isLoading: bookmarking }] = useAddBookmarkMutation();
+    const [removeBookmark, { isLoading: unbookmarking }] = useRemoveBookmarkMutation();
+    const bookmarkBusy = bookmarking || unbookmarking;
+
     const [bookmarked, setBookmarked] = useState<boolean>(false);
     const [bookmarkJustSaved, setBookmarkJustSaved] = useState<boolean>(false);
+    const [bookmarkHydrated, setBookmarkHydrated] = useState<boolean>(false);
+
+    // On load, check the account's real bookmark list once and sync the toggle to it.
+    // After that we manage `bookmarked` optimistically from user clicks, same as `liked`.
+    useEffect(() => {
+        if (!post || bookmarkHydrated || bookmarksData === undefined) return;
+
+        const list = normalizeBookmarksList(bookmarksData);
+        const alreadySaved = list.some((entry) => {
+            const entryPostId = extractPostId(entry);
+            return entryPostId !== undefined && String(entryPostId) === String(post.id);
+        });
+
+        setBookmarked(alreadySaved);
+        setBookmarkHydrated(true);
+    }, [post, bookmarksData, bookmarkHydrated]);
 
     const [updatePostById, { isLoading: updating }] = useUpdatePostByIdMutation();
     const [deletePostById, { isLoading: deleting }] = useDeletePostByIdMutation();
@@ -112,22 +186,63 @@ export const PostDetailComponent = () => {
 
     async function handleLike(id: number) {
         if (voting) return;
+
+        // Already liked -> unlike (update the count right away, API call best-effort)
+        if (liked) {
+            setLiked(false);
+            setLikeCount((current) => (current ?? 0) - 1);
+
+            if (likedVoteId !== null) {
+                try {
+                    await deleteVoteById({ voteId: likedVoteId }).unwrap();
+                } catch (error) {
+                    console.error("Failed to remove vote on server (count already updated locally):", error);
+                }
+            }
+            setLikedVoteId(null);
+            return;
+        }
+
+        // Not liked yet -> like (update the count right away, API call best-effort)
+        setLiked(true);
+        setLikeCount((current) => (current ?? 0) + 1);
+
         try {
-            await createVote({ newVote: { postId: id, voteTypeId: 1 } }).unwrap();
+            const result = await createVote({
+                newVote: { postId: id, voteTypeId: LIKE_VOTE_TYPE_ID, value: LIKE_VOTE_TYPE_ID },
+            }).unwrap();
+
+            setLikedVoteId(result?.id ?? null);
         } catch (error) {
-            console.error("Failed to vote:", error);
+            console.error("Failed to save vote on server (count already updated locally):", error);
         }
     }
 
+    // Toggle save/unsave. Optimistic like handleLike, but backed by addBookmark/removeBookmark
+    // so the saved state is permanent on the account until the user unsaves it.
     async function handleBookmark(id: number) {
-        if (bookmarking || bookmarked) return;
+        if (bookmarkBusy) return;
+
+        if (bookmarked) {
+            setBookmarked(false);
+            try {
+                await removeBookmark([id]).unwrap();
+            } catch (error) {
+                console.error("Failed to remove bookmark on server (reverting):", error);
+                setBookmarked(true);
+            }
+            return;
+        }
+
+        setBookmarked(true);
+        setBookmarkJustSaved(true);
+        setTimeout(() => setBookmarkJustSaved(false), 1400);
+
         try {
             await addBookmark([id]).unwrap();
-            setBookmarked(true);
-            setBookmarkJustSaved(true);
-            setTimeout(() => setBookmarkJustSaved(false), 600);
         } catch (error) {
-            console.error("Failed to bookmark post:", error);
+            console.error("Failed to save bookmark on server (reverting):", error);
+            setBookmarked(false);
         }
     }
 
@@ -293,7 +408,7 @@ export const PostDetailComponent = () => {
                                 {/* TAGS */}
                                 {post.tagResponses && post.tagResponses.length > 0 && (
                                     <div className="mt-4 flex flex-wrap gap-2">
-                                        {post.tagResponses.map((tag:Tag) => (
+                                        {post.tagResponses.map((tag: Tag) => (
                                             <span
                                                 key={tag.id}
                                                 className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-200"
@@ -338,9 +453,12 @@ export const PostDetailComponent = () => {
                                                 type="button"
                                                 onClick={() => handleLike(post.id)}
                                                 disabled={voting}
-                                                className="rounded-full border border-slate-300 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-colors disabled:opacity-50 ${liked
+                                                        ? "border border-blue-400 bg-blue-400/15 text-blue-600 dark:text-blue-300"
+                                                        : "border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                    }`}
                                             >
-                                                {voting ? "Liking..." : `Likes (${post.score})`}
+                                                {liked ? "Liked" : "Like"} ({likeCount ?? post.score})
                                             </button>
 
                                             <button
@@ -351,27 +469,43 @@ export const PostDetailComponent = () => {
                                                 {showComments ? "Hide comments" : `Comments (${post.comments?.length ?? 0})`}
                                             </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleBookmark(post.id)}
-                                                disabled={bookmarking || bookmarked}
-                                                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all duration-300 disabled:cursor-default ${
-                                                    bookmarked
-                                                        ? "border border-amber-400 bg-amber-400/15 text-amber-600 dark:text-amber-300"
-                                                        : "border border-slate-300 text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-slate-700"
-                                                } ${bookmarkJustSaved ? "scale-110" : "scale-100"}`}
-                                            >
-                                                <svg
-                                                    className="h-3.5 w-3.5"
-                                                    viewBox="0 0 24 24"
-                                                    fill={bookmarked ? "currentColor" : "none"}
-                                                    stroke="currentColor"
-                                                    strokeWidth={2}
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBookmark(post.id)}
+                                                    disabled={bookmarkBusy}
+                                                    title={bookmarked ? "Remove from saves" : "Save this question"}
+                                                    className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold shadow-sm transition-all duration-300 ease-out disabled:cursor-default disabled:opacity-60 ${
+                                                        bookmarked
+                                                            ? "border border-yellow-500 bg-yellow-400 text-yellow-950 shadow-yellow-400/40 hover:bg-yellow-300 dark:border-yellow-300 dark:bg-yellow-400 dark:text-yellow-950"
+                                                            : "border border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-100 dark:border-slate-500 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                    } ${bookmarkJustSaved ? "scale-110" : "scale-100"}`}
                                                 >
-                                                    <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                                {bookmarking ? "Saving..." : bookmarked ? "Saved" : "Save"}
-                                            </button>
+                                                    <svg
+                                                        className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                                                            bookmarkJustSaved ? "-rotate-6 scale-125" : "rotate-0 scale-100"
+                                                        }`}
+                                                        viewBox="0 0 24 24"
+                                                        fill={bookmarked ? "currentColor" : "none"}
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                    >
+                                                        <path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    {bookmarkBusy ? "Saving..." : bookmarked ? "Saved" : "Save"}
+                                                </button>
+
+                                                {/* Little "Saved!" toast that pops up and fades */}
+                                                <span
+                                                    className={`pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-medium text-white shadow-md transition-all duration-300 dark:bg-slate-100 dark:text-slate-900 ${
+                                                        bookmarkJustSaved
+                                                            ? "-translate-y-1 opacity-100"
+                                                            : "translate-y-1 opacity-0"
+                                                    }`}
+                                                >
+                                                    Saved!
+                                                </span>
+                                            </div>
 
                                             <button
                                                 type="button"
