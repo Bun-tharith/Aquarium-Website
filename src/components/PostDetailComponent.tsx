@@ -293,7 +293,7 @@ export const PostDetailComponent = () => {
                                 {/* TAGS */}
                                 {post.tagResponses && post.tagResponses.length > 0 && (
                                     <div className="mt-4 flex flex-wrap gap-2">
-                                        {post.tagResponses.map((tag) => (
+                                        {post.tagResponses.map((tag:Tag) => (
                                             <span
                                                 key={tag.id}
                                                 className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-200"
