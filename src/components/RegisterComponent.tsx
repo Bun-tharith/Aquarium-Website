@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUserRegisterMutation } from "../services/auth";
 
 type RegisterFormValues = {
@@ -160,8 +160,15 @@ export default function RegisterComponent() {
                                 {isLoading ? "Registering..." : "Register"}
                             </button>
                         </form>
+                          <Link
+                    to="/login"
+                    className="ml-14 text-sm text-red-500 hover:underline cursor-pointer"
+                >
+                    I have account already
+                </Link>
                     </div>
                 </div>
+              
 
                 {/* Right: Picture Panel */}
                 <div className="w-1/2 relative flex items-center justify-center bg-white overflow-hidden">

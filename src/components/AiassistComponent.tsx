@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ChatMessage } from "./types";
 
@@ -40,7 +40,6 @@ function stripMarkdown(text: string): string {
 }
 
 type AiAssistPanelProps = {
-
     variant?: "sidebar" | "page";
 };
 
@@ -56,11 +55,14 @@ export const AiAssistPanel = ({ variant = "sidebar" }: AiAssistPanelProps) => {
     const [isChatOpen, setIsChatOpen] = useState(true);
     const isOpen = variant === "page" ? true : isChatOpen;
 
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!isOpen) return;
-        document
-            .getElementById("ai-scroll-anchor")
-            ?.scrollIntoView({ behavior: "smooth" });
+        const el = chatContainerRef.current;
+        if (el) {
+            el.scrollTop = el.scrollHeight;
+        }
     }, [aiMessages, aiLoading, isOpen]);
 
     async function sendQuestionToGemini() {
@@ -170,7 +172,6 @@ export const AiAssistPanel = ({ variant = "sidebar" }: AiAssistPanelProps) => {
     }
 
     return (
-
         <aside
             className={
                 variant === "page"
@@ -233,7 +234,10 @@ export const AiAssistPanel = ({ variant = "sidebar" }: AiAssistPanelProps) => {
             {isOpen && (
                 <>
                     <div className="mt-4 flex min-h-0 flex-1 flex-col lg:mt-6">
-                        <div className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors duration-300 dark:border-slate-500 dark:bg-slate-800 sm:p-4">
+                        <div
+                            ref={chatContainerRef}
+                            className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors duration-300 dark:border-slate-500 dark:bg-slate-800 sm:p-4"
+                        >
                             {!isLoggedIn && (
                                 <p className="rounded-lg bg-slate-100 p-2 text-xs text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
                                     Sign in to chat with the AI assistant.
@@ -283,8 +287,6 @@ export const AiAssistPanel = ({ variant = "sidebar" }: AiAssistPanelProps) => {
                                     {aiError}
                                 </p>
                             )}
-
-                            <div id="ai-scroll-anchor" />
                         </div>
                     </div>
 

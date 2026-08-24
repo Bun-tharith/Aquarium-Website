@@ -19,7 +19,7 @@ export const tagService = forumApi.injectEndpoints({
       query: ({ newTag }) => ({
         url: `/tags`,
         method: "POST",
-        body: newTag,
+        body: newTag, // expects { tagName: "..." }
       }),
       invalidatesTags: ["Tags"],
     }),
@@ -29,7 +29,7 @@ export const tagService = forumApi.injectEndpoints({
       query: ({ updatedTag, tagId }) => ({
         url: `/tags/${tagId}`,
         method: "PUT",
-        body: updatedTag,
+        body: updatedTag, // expects { tagName: "..." }
       }),
       invalidatesTags: (result, error, arg) => [
         "Tags",

@@ -139,7 +139,7 @@ export default function LoginComponent() {
 
                             <Link
                                 to="/register"
-                                className="text-center text-sm text-red-500 hover:underline cursor-pointer"
+                                className="ml-14 text-sm text-red-500 hover:underline cursor-pointer"
                             >
                                 Don't have account yet
                             </Link>

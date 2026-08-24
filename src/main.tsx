@@ -14,6 +14,7 @@ import SavedQuestionPage from "./page/SavedQuestionPage";
 import PostDetailPage from "./page/PostDetailPage";
 import ProfileComponent from "./components/ProfileComponent";
 import { ThemeProvider } from "./ThemeProvider";
+import { TagBrowserComponent } from "./components/TagBrowserComponent";
 
 const router = createBrowserRouter([
   {
@@ -33,14 +34,6 @@ const router = createBrowserRouter([
         element: <PostDetailPage />,
       },
       {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
-      {
         path: "/create-post",
         element: <CreatePostComponent />,
       },
@@ -56,7 +49,19 @@ const router = createBrowserRouter([
         path: "/profile",
         element: <ProfileComponent />,
       },
+      {
+          path: "/tag",
+        element: <TagBrowserComponent />,
+      }
     ],
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
   },
 ]);
 

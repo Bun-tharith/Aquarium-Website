@@ -14,6 +14,12 @@ export const postService = forumApi.injectEndpoints({
       providesTags: (result, error, postId) => [{ type: "Post", id: postId }],
     }),
 
+    // GET /posts/tag/{tagId}
+    getPostsByTag: builder.query({
+      query: (tagId) => `/posts/tag/${tagId}`,
+      providesTags: ["Posts"],
+    }),
+
     // POST /posts
     createPost: builder.mutation({
       query: (newPost) => ({
@@ -51,6 +57,7 @@ export const postService = forumApi.injectEndpoints({
 export const {
   useGetAllPostsQuery,
   useGetPostByIdQuery,
+  useGetPostsByTagQuery,
   useCreatePostMutation,
   useUpdatePostByIdMutation,
   useDeletePostByIdMutation,
