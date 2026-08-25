@@ -99,7 +99,7 @@ export const FooterComponent = () => {
           <div className="flex flex-col items-center space-y-3">
             <img
               alt="AQUARIUM Logo"
-              className="h-20 w-20 rounded-full border border-slate-300 object-contain p-1 dark:border-indigo-400/30 sm:h-24 sm:w-24"
+              className="h-16 w-16 shrink-0 rounded-full border border-slate-300 object-contain p-1 dark:border-indigo-400/30 xs:h-20 xs:w-20 sm:h-24 sm:w-24"
               id="custom-cartora-logo"
               src="/images/Logo.png"
             />
@@ -127,15 +127,15 @@ export const FooterComponent = () => {
             <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
               CONTACT
             </h4>
-            <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-              <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Call:</p>
-                <p className="mt-0.5">(+885)99 666 777</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Gmail:</p>
-                <p className="mt-0.5 break-all">istadshop168@gmail.com</p>
-              </div>
+            <div className="space-y-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+              <p className="whitespace-nowrap">
+                <span className="text-slate-500 dark:text-slate-400">Call: </span>
+                (+885)99 666 777
+              </p>
+              <p className="break-all">
+                <span className="text-slate-500 dark:text-slate-400">Gmail: </span>
+                istadshop168@gmail.com
+              </p>
             </div>
           </div>
 
@@ -143,11 +143,13 @@ export const FooterComponent = () => {
             <h4 className="text-base font-bold text-slate-900 dark:text-white">
               Organized by
             </h4>
-            <img
-              alt="ISTAD Logo"
-              className="mx-auto h-24 w-24 rounded-full border border-slate-300 object-contain p-1 dark:border-indigo-400/30 sm:h-28 sm:w-28"
-              src="/images/ISTAD.png"
-            />
+            <div className="mx-auto flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-300 bg-white p-1 dark:border-indigo-400/30 sm:h-28 sm:w-28">
+              <img
+                alt="ISTAD Logo"
+                className="h-full w-full object-contain"
+                src="/images/Istad.png"
+              />
+            </div>
           </div>
 
           <div className="w-full space-y-4 border-t border-slate-300 pt-6 text-xs text-slate-500 dark:border-indigo-800/60 dark:text-slate-400">
@@ -167,15 +169,15 @@ export const FooterComponent = () => {
         </div>
 
         <div className="hidden lg:block">
-          <div className="grid grid-cols-12 items-start gap-10 pb-12">
-            <div className="col-span-4 space-y-6">
+          <div className="grid grid-cols-12 items-start gap-6 pb-12 xl:gap-10">
+            <div className="col-span-4 min-w-0 space-y-6">
               <div className="flex items-center space-x-3">
                 <img
-                  alt="CARTORA Logo"
-                  className="h-20 w-20 object-contain"
+                  alt="AQUARIUM Logo"
+                  className="h-12 w-12 shrink-0 object-contain xl:h-16 xl:w-16 2xl:h-20 2xl:w-20"
                   src="/images/Logo.png"
                 />
-                <span className="font-serif text-2xl font-bold uppercase tracking-wider">
+                <span className="truncate font-serif text-xl font-bold uppercase tracking-wider xl:text-2xl">
                   AQUARIUM
                 </span>
               </div>
@@ -190,40 +192,42 @@ export const FooterComponent = () => {
               </div>
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-2 min-w-0">
               <LinkList title="COMPANY" links={COMPANY_LINKS} align="left" />
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-2 min-w-0">
               <LinkList title="EXPLORE" links={EXPLORE_LINKS} align="left" />
             </div>
 
-            <div className="col-span-2 space-y-4">
+            <div className="col-span-2 min-w-0 space-y-4">
               <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
                 CONTACT
               </h4>
-              <div className="space-y-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Call:</p>
-                  <p className="mt-0.5">(+885)99 666 777</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Gmail:</p>
-                  <p className="mt-0.5 break-all">istadshop168@gmail.com</p>
-                </div>
+              <div className="space-y-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                <p className="whitespace-nowrap">
+                  <span className="text-slate-500 dark:text-slate-400">Call: </span>
+                  (+885)99 666 777
+                </p>
+                <p className="break-all">
+                  <span className="text-slate-500 dark:text-slate-400">Gmail: </span>
+                  istadshop168@gmail.com
+                </p>
               </div>
             </div>
 
-            <div className="col-span-2 space-y-4">
+            <div className="col-span-2 min-w-0 space-y-4">
               <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
                 ORGANIZE BY ISTAD
               </h4>
               <div className="flex justify-start pt-1">
-                <img
-                  alt="ISTAD Logo"
-                  className="h-36 w-36 rounded-full border border-slate-300 object-contain p-1 dark:border-indigo-400/30"
-                  src="/images/Istad.png"
-                />
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-300 bg-white p-1 dark:border-indigo-400/30 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24">
+                  <img
+                    alt="ISTAD Logo"
+                    className="h-full w-full object-contain"
+                    src="/images/Istad.png"
+                  />
+                </div>
               </div>
             </div>
           </div>

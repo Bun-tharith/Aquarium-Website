@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { useUserLoginMutation } from "../services/auth";
@@ -14,6 +15,8 @@ export default function LoginComponent() {
 
     const [userLogin, { isLoading }] = useUserLoginMutation();
 
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
     const {
         register,
         handleSubmit,
@@ -27,6 +30,8 @@ export default function LoginComponent() {
     });
 
     const onHandleSubmitForm = async (value: LoginFormValues) => {
+        setAlertMessage(null);
+
         try {
             const data = await userLogin({
                 loginInfo: {
@@ -50,7 +55,12 @@ export default function LoginComponent() {
                 type: "manual",
                 message: "Invalid email or password",
             });
+            setAlertMessage("Invalid email or password. Please try again.");
         }
+    };
+
+    const onHandleInvalidForm = () => {
+        setAlertMessage("Please fix the highlighted fields before continuing.");
     };
 
     return (
@@ -77,10 +87,39 @@ export default function LoginComponent() {
                             </div>
                         </div>
 
+                        {/* Alert */}
+                        {alertMessage && (
+                            <div
+                                role="alert"
+                                className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3"
+                            >
+                                <svg
+                                    className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.72-1.36 3.486 0l6.28 11.18c.75 1.335-.213 2.99-1.742 2.99H3.72c-1.53 0-2.492-1.655-1.743-2.99l6.28-11.18zM11 14a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.75a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                <p className="text-sm text-red-600 flex-1">{alertMessage}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setAlertMessage(null)}
+                                    className="text-red-400 hover:text-red-600 text-sm leading-none"
+                                    aria-label="Dismiss"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
                         {/* Form */}
                         <form
                             className="space-y-4"
-                            onSubmit={handleSubmit(onHandleSubmitForm)}
+                            onSubmit={handleSubmit(onHandleSubmitForm, onHandleInvalidForm)}
                             noValidate
                         >
                             <div>
