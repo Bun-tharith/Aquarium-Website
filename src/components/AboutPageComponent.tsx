@@ -59,14 +59,14 @@ const members: Member[] = [
         name: "Srorng Sokcheat",
         role: "Mentor",
         image:
-            "https://i.pinimg.com/736x/8e/ef/3b/8eef3b4b6aae5b017ac6e119d73194f9.jpg",
+            "/images/Teacher.PNG",
         skills: ["Full Stack Development", "Data Analytics", "Blockchain Development"],
         links: { website: "#", github: "#", linkedin: "#" },
     },
     {
         name: "Bun Tharith",
         role: "Member",
-        image: "https://i.pinimg.com/736x/5d/00/b5/5d00b53573063b28a42571bd22d813e5.jpg",
+        image: "/images/Rith.JPG",
         skills: ["Front-End", "Java Script", "React JS"],
         highlightedSkill: "Blockchain Development",
         links: { website: "#", github: "#", linkedin: "#" },
